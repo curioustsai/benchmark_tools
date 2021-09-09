@@ -1,0 +1,27 @@
+[config]
+models = ["speexdsp", "rnnoise", "dtln", "fullsubnet"]
+format = "*.wav"
+
+[data_path]
+clean = "/home/richard/workspace/dns_challenge/synthetic/no_reverb/clean"
+noisy = "/home/richard/workspace/dns_challenge/synthetic/no_reverb/noisy"
+speexdsp = "/home/richard/workspace/dns_challenge/synthetic/no_reverb/speexdsp"
+rnnoise = "/home/richard/workspace/dns_challenge/synthetic/no_reverb/rnnoise"
+nsnet = "/home/richard/workspace/dns_challenge/synthetic/no_reverb/Nset"
+dtln = "/home/richard/workspace/dns_challenge/synthetic/no_reverb/DTLN_norm_500h/"
+fullsubnet = "/home/richard/workspace/dns_challenge/synthetic/no_reverb/FullSubNet/enhanced_0058"
+
+[merge]
+enable = true 
+output_dir = "/home/richard/workspace/dns_challenge/synthetic/no_reverb/merge"
+
+[pesq]
+enable = true
+output_csv = "/home/richard/workspace/dns_challenge/synthetic/no_reverb/synthetic_no_reverb_pesq.txt"
+
+[visqol]
+enable = true
+visqol_dir = "/home/richard/workspace/audio_quality/visqol/"
+visqol_bin = "/home/richard/workspace/audio_quality/visqol/bazel-bin/visqol"
+batch_csv = "/home/richard/workspace/dns_challenge/synthetic/no_reverb/synthetic_no_reverb.csv"
+results_csv = "/home/richard/workspace/dns_challenge/synthetic/no_reverb/synthetic_no_reverb_visqol.csv"
