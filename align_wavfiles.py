@@ -15,7 +15,7 @@ log.addHandler(fh)
 
 def main():
     targ = os.path.join(os.path.curdir,
-                               "source_file", 
+                               "source_file",
                                "Dyna-Src_P835_4_sentences_4convergence_16000Hz.wav")
 
     parser = argparse.ArgumentParser(description="Align audio wavfiles")
@@ -54,7 +54,13 @@ def main():
             print("The sample rate of {} doesnt' match with target file {}.".format(input_file, target_file))
             return
 
-        lag = xcorr(target, source)
+        # use small piece to align
+        if len(target) > 10 * fs_t and len(source) > 10 * fs:
+            start_sample, end_sample = 0, 10 * fs_t
+            lag = xcorr(target[start_sample: end_sample], source[start_sample:end_sample])
+        else:
+            lag = xcorr(target, source)
+
         align = align_wav(source, lag, target.size)
         soundfile.write(output_file, align, fs_t)
 
@@ -72,7 +78,13 @@ def main():
                 print("The sample rate of {} doesnt' match with target file {}.".format(source_file, target_file))
                 continue
 
-            lag = xcorr(target, source)
+            # use small piece to align
+            if len(target) > 10 * fs_t and len(source) > 10 * fs:
+                start_sample, end_sample = 0, 10 * fs_t
+                lag = xcorr(target[start_sample: end_sample], source[start_sample:end_sample])
+            else:
+                lag = xcorr(target, source)
+
             align = align_wav(source, lag, target.size)
 
             soundfile.write(os.path.join(batch_output_folder, os.path.basename(source_file)), align, fs_t)
