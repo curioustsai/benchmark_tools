@@ -55,7 +55,7 @@ def main():
             return
 
         # use small piece to align
-        if len(target) > 10 * fs_t and len(source) > 10 * fs:
+        if len(target) > 10 * fs_t and len(source) > 10 * fs_i:
             start_sample, end_sample = 0, 10 * fs_t
             lag = xcorr(target[start_sample: end_sample], source[start_sample:end_sample])
         else:
