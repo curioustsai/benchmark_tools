@@ -1,0 +1,52 @@
+#!/home/richard/anaconda3/bin/python3
+"""
+Created on April 15, 2020
+
+@author : Richard Tsai
+
+"""
+
+import numpy as np
+import argparse
+from scipy import signal
+from scipy.io import wavfile
+from matplotlib import pyplot as plt
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Spectrum Analyzer")
+    parser.add_argument("file", type=argparse.FileType('r'), nargs='+')
+    args = parser.parse_args()
+
+    plt.rcParams['figure.figsize'] = [12.4, 9.6]
+    fftlen_map = {"48000": 512, "32000": 512, "16000": 256, "8000": 256}
+
+    for f in args.file:
+        fs, data = wavfile.read(f.name)
+        if data.dtype == 'int16':
+            data = data / 32768
+
+        fftlen = fftlen_map[str(fs)];
+
+        noverlap = fftlen / 2
+        freq, Pxx = signal.welch(data,                        # signal
+                                 fs=fs,                    # sample rate
+                                 nperseg=fftlen,           # segment size
+                                 window='hanning',         # window type to use
+                                 nfft=fftlen,              # num. of samples in FFT
+                                 detrend=False,            # remove DC part
+                                 scaling='spectrum',       # return power spectrum [V^2]
+                                 noverlap=noverlap)        # overlap between segments
+
+        Pxx_dB = 10 * np.log10(Pxx)
+        plt.plot(freq, Pxx_dB, label=f.name)
+        plt.xlim([freq[2], freq[-1]])
+        plt.ylim([-96, 0])
+        # plt.xscale('log')   # uncomment if you want log scale on x-axis
+        plt.yticks(np.arange(-96, 0, 6))
+        plt.xlabel('f, Hz')
+        plt.ylabel('Power spectrum, dB')
+        plt.grid(True)
+        plt.legend()
+
+    plt.show()

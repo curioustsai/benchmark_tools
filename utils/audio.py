@@ -13,7 +13,8 @@ def downsample_16kHz(filepath):
         soundfile.write(filepath.replace(".wav", "_16kHz.wav"), src_output, 16000)
 
 def rms(signal):
-    rms = np.mean(signal**2)
+    eps = 1e-10
+    rms = max(np.mean(signal**2), eps)
     return 10 * np.log10(rms)
 
 

@@ -32,6 +32,7 @@ def play_record_pull_audio(ssh, src_file,  delay_start_sec, record_sec, model):
     filename = "{}_{}.wav".format(model, strftime)
     host_record_file = os.path.join(os.path.curdir, "degraded_file", filename)
 
+    th1.join()
     ssh.get_file(dut_wav_path, host_record_file)
     log.info('pull {} to {}'.format(dut_wav_path, host_record_file))
     time.sleep(0.5)

@@ -1,0 +1,25 @@
+#!/home/richard/anaconda3/bin/python3
+"""
+Created on April 15, 2020
+
+@author : Richard Tsai
+
+"""
+
+import argparse
+from scipy.io import wavfile
+from utils.audio import rms
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Spectrum Analyzer")
+    parser.add_argument("file", type=argparse.FileType('r'), nargs='+')
+    args = parser.parse_args()
+
+    for f in args.file:
+        fs, data = wavfile.read(f.name)
+
+        if data.dtype == 'int16':
+            data = data / 32768
+
+        print(rms(data))

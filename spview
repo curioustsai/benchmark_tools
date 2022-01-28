@@ -1,0 +1,39 @@
+#!/home/richard/anaconda3/bin/python3
+"""
+Created on April 15, 2020
+
+@author : Richard Tsai
+
+"""
+
+import numpy as np
+import argparse
+from scipy.io import wavfile
+from matplotlib import pyplot as plt
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Spectrum Analyzer")
+    parser.add_argument("file", type=argparse.FileType('r'), nargs='+')
+    args = parser.parse_args()
+
+    for f in args.file:
+        fig, (ax1, ax2) = plt.subplots(nrows=2, sharex=True)
+        plt.rcParams['figure.figsize'] = [12.4, 9.6]
+        fftlen_map = {"48000": 512, "32000": 512, "16000": 256, "8000": 256}
+
+        fs, data = wavfile.read(f.name)
+        if data.dtype == 'int16':
+            data = data / 32768
+
+        time_axis = np.arange(0, len(data)) / fs
+        ax1.plot(time_axis, data)
+        ax1.set(xlim=(0, time_axis[-1]), ylim=(-1, 1))
+        ax1.grid()
+        
+        fftlen = fftlen_map[str(fs)];
+        noverlap = fftlen / 2
+        Pxx, freqs, bins, im = ax2.specgram(data, NFFT=fftlen, Fs=fs, noverlap=fftlen/2)
+
+        plt.title(f.name)
+        plt.show()
