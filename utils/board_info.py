@@ -22,10 +22,10 @@ def get_model_name(ssh):
         for line in f.readlines():
             key, match = parse_line(line, board_dict)
 
-            if key == 'model':
+            if key == 'model' and match is not None:
                 model = match.group('model')
                 model = model.replace(' ', '_')
-            elif key == 'hwaddr':
+            elif key == 'hwaddr' and match is not None:
                 hwaddr = match.group('hwaddr')
 
     model = model + '-' + hwaddr
