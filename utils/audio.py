@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import librosa
 import soundfile 
@@ -10,9 +9,8 @@ def downsample_16kHz(filepath):
     signals, fs = librosa.load(filepath)
 
     if fs != 16000:
-        src_output = librosa.resample(signal, fs, 16000)
-    soundfile.write(filepath.replace(".wav", "_16kHz.wav", src_output, 16000))
-
+        src_output = librosa.resample(signals, fs, 16000)
+        soundfile.write(filepath.replace(".wav", "_16kHz.wav"), src_output, 16000)
 
 def rms(signal):
     rms = np.mean(signal**2)

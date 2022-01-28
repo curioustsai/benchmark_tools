@@ -4,7 +4,7 @@ import soundfile
 import pathlib
 import logging
 from glob import glob
-from utils.audio import xcorr, align_wav, rms
+from utils.audio import xcorr, align_wav
 
 log = logging.getLogger('Diag')
 log.setLevel(logging.DEBUG)
@@ -74,12 +74,12 @@ def main():
             target, fs_t = soundfile.read(target_file)
             source, fs_s = soundfile.read(source_file)
 
-            if fs_t != fs_t:
+            if fs_t != fs_s:
                 print("The sample rate of {} doesnt' match with target file {}.".format(source_file, target_file))
                 continue
 
             # use small piece to align
-            if len(target) > 10 * fs_t and len(source) > 10 * fs:
+            if len(target) > 10 * fs_t and len(source) > 10 * fs_t:
                 start_sample, end_sample = 0, 10 * fs_t
                 lag = xcorr(target[start_sample: end_sample], source[start_sample:end_sample])
             else:

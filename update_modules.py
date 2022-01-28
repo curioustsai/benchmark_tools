@@ -1,12 +1,6 @@
-#!/home/richard/miniconda3/bin/python
 import os
-import subprocess
-import time
-import datetime
 import logging
 import argparse
-import pathlib
-import soundfile
 
 from utils.ssh_client import SSHClient
 
