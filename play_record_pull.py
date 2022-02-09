@@ -17,15 +17,32 @@ fh.setLevel(logging.DEBUG)
 log.addHandler(fh)
 
 
-def play_record_pull_audio(ssh, src_file,  delay_start_sec, dst_folder, record_sec, model):
+def play_record_pull_audio(ssh, host_play_audio, dut_play_audio, delay_start_sec, dst_folder, record_sec, model):
+    dut_play_path="/tmp/play.wav"
+    dut_record_path = "/tmp/record.wav"
+    cmd_record = "arecord -r 16000 -f S16_LE -d {} {} &".format(record_sec, dut_record_path)
+    cmd_play = "aplay -f S16_LE -r 16000 {}".format(dut_play_path)
+    script_file = "./script.sh"
+
+    if model.startswith("UVC_AI_360"):
+        cmd_play = "aplay -f S16_LE -B 50000 -r 16000 {}".format(dut_play_path)
+
     start_time = time.time() + delay_start_sec
-    th1 = PlayThread(start_time, src_file)
+    th1 = PlayThread(start_time, host_play_audio)
     th1.start()
 
-    dut_wav_path = '/tmp/test.wav'
-    cmd = "arecord -r 16000 -f S16_LE -d {} {}".format(record_sec,
-        dut_wav_path)
-    ssh.execmd_getmsg(cmd)
+    if dut_play_audio is not None:
+        with open(script_file, 'w') as f:
+            f.write("{}\n".format(cmd_record))
+            f.write("{}\n".format(cmd_play))
+
+        ssh.put_file(dut_play_audio, dut_play_path)
+        ssh.put_file(script_file, "/tmp/script.sh")
+        ssh.execmd_getmsg("chmod +x /tmp/script.sh")
+        ssh.execmd_getmsg("/tmp/script.sh")
+
+    else:
+        ssh.execmd_getmsg(cmd_record)
 
     strftime = datetime.datetime.now().strftime("%y%m%d-%H%M%S")
     filename = "{}_{}.wav".format(model, strftime)
@@ -33,25 +50,42 @@ def play_record_pull_audio(ssh, src_file,  delay_start_sec, dst_folder, record_s
 
     th1.join()
 
-    ssh.get_file(dut_wav_path, host_record_file)
-    log.info('pull {} to {}'.format(dut_wav_path, host_record_file))
+    ssh.get_file(dut_record_path, host_record_file)
+    log.info('pull {} to {}'.format(dut_record_path, host_record_file))
     time.sleep(0.5)
 
     return host_record_file
 
 
-def record_pull_audio(ssh, dst_folder, record_sec, model):
-    dut_wav_path = '/tmp/test.wav'
-    cmd = "arecord -r 16000 -f S16_LE -d {} {}".format(record_sec,
-        dut_wav_path)
-    ssh.execmd_getmsg(cmd)
+def record_pull_audio(ssh, dut_play_audio, dst_folder, record_sec, model):
+    dut_play_path="/tmp/play.wav"
+    dut_record_path = "/tmp/record.wav"
+    cmd_record = "arecord -r 16000 -f S16_LE -d {} {} &".format(record_sec, dut_record_path)
+    cmd_play = "aplay -f S16_LE -r 16000 {}".format(dut_play_path)
+    script_file = "./script.sh"
+
+    if model.startswith("UVC_AI_360"):
+        cmd_play = "aplay -f S16_LE -B 50000 -r 16000 {}".format(dut_play_path)
+
+    if dut_play_audio is not None:
+        with open(script_file, 'w') as f:
+            f.write("{}\n".format(cmd_record))
+            f.write("{}\n".format(cmd_play))
+
+        ssh.put_file(dut_play_audio, dut_play_path)
+        ssh.put_file(script_file, "/tmp/script.sh")
+        ssh.execmd_getmsg("chmod +x /tmp/script.sh")
+        ssh.execmd_getmsg("/tmp/script.sh")
+
+    else:
+        ssh.execmd_getmsg(cmd_record)
 
     strftime = datetime.datetime.now().strftime("%y%m%d-%H%M%S")
     filename = "{}_{}.wav".format(model, strftime)
     host_record_file = os.path.join(dst_folder, filename)
 
-    ssh.get_file(dut_wav_path, host_record_file)
-    log.info('pull {} to {}'.format(dut_wav_path, host_record_file))
+    ssh.get_file(dut_record_path, host_record_file)
+    log.info('pull {} to {}'.format(dut_record_path, host_record_file))
     time.sleep(0.5)
 
     return host_record_file
@@ -68,36 +102,42 @@ def calculate_visqol_mos(reference_file, degraded_file):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Play, Record, Pull audio")
+    parser = argparse.ArgumentParser(description="Play, Record, and Pull audio")
     parser.add_argument("--ip", type=str,
         default="192.168.1.156",
         help="camera ip")
     parser.add_argument("--username", type=str,
         default="ubnt",
-        help="camera username")
+        help="camera username, default: ubnt")
     parser.add_argument("--password", type=str,
         default="ubntubnt",
-        help="camera password")
-    parser.add_argument("--source_file", type=pathlib.Path,
+        help="camera password, default: ubntubnt")
+    parser.add_argument("--duration", type=float,
+        default=10.0,
+        help="recording duration when source file is not specified, default: 10.0")
+    parser.add_argument("--host_play_audio", type=pathlib.Path,
         default=None,
-        help="source file to be played")
+        help="source file to be played, default: None")
+    parser.add_argument("--dut_play_audio", type=pathlib.Path,
+        default=None,
+        help="source file to be played, default: None")
     parser.add_argument("--dest_folder", type=pathlib.Path,
         default=os.getcwd(),
-        help="source file to be played")
+        help="destinate folder, default: current working directory")
 
     p = parser.parse_args()
     camera_ip = p.ip
     username = p.username
     password = p.password
     delay_start_sec = 0.5
-    src_file = p.source_file
+    host_play_audio = p.host_play_audio
+    dut_play_audio = p.dut_play_audio
     dst_folder = p.dest_folder
 
-    if src_file is not None:
-        samples, sample_rate = soundfile.read(src_file)
+    record_sec = p.duration
+    if dut_play_audio is not None:
+        samples, sample_rate = soundfile.read(dut_play_audio)
         record_sec = int(len(samples)/sample_rate) + delay_start_sec + 1
-    else:
-        record_sec = 10
 
     try:
         ssh = SSHClient(host=camera_ip, port=22,
@@ -115,15 +155,17 @@ if __name__ == '__main__':
 
     model = get_model_name(ssh)
 
-    if src_file is not None:
+    if host_play_audio is not None:
         degraded_path = play_record_pull_audio(ssh,
-            src_file=src_file,
+            host_play_audio=host_play_audio,
+            dut_play_audio=dut_play_audio,
             delay_start_sec=delay_start_sec,
             dst_folder=dst_folder,
             record_sec=record_sec,
             model=model)
     else:
         degraded_path = record_pull_audio(ssh,
+            dut_play_audio=dut_play_audio,
             record_sec=record_sec,
             dst_folder=dst_folder,
             model=model)
