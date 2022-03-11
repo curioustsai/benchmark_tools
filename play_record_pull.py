@@ -20,7 +20,7 @@ log.addHandler(fh)
 def play_record_pull_audio(ssh, host_play_audio, dut_play_audio, delay_start_sec, dst_folder, record_sec, model):
     dut_play_path="/tmp/play.wav"
     dut_record_path = "/tmp/record.wav"
-    cmd_record = "arecord -r 16000 -f S16_LE -d {} {}".format(record_sec, dut_record_path)
+    cmd_record = "arecord -D ubnt_capture -r 16000 -f S16_LE -d {} {}".format(record_sec, dut_record_path)
     cmd_play = "aplay -f S16_LE -r 16000 {}".format(dut_play_path)
     script_file = "./script.sh"
 
@@ -60,7 +60,7 @@ def play_record_pull_audio(ssh, host_play_audio, dut_play_audio, delay_start_sec
 def record_pull_audio(ssh, dut_play_audio, dst_folder, record_sec, model):
     dut_play_path="/tmp/play.wav"
     dut_record_path = "/tmp/record.wav"
-    cmd_record = "arecord -r 16000 -f S16_LE -d {} {}".format(record_sec, dut_record_path)
+    cmd_record = "arecord -D ubnt_capture -r 16000 -f S16_LE -d {} {}".format(record_sec, dut_record_path)
     cmd_play = "aplay -f S16_LE -r 16000 {}".format(dut_play_path)
     script_file = "./script.sh"
 
