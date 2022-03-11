@@ -12,11 +12,19 @@ def downsample_16kHz(filepath):
         src_output = librosa.resample(signals, fs, 16000)
         soundfile.write(filepath.replace(".wav", "_16kHz.wav"), src_output, 16000)
 
-def rms(signal):
+def rms(signal, frame_size=128):
     eps = 1e-10
-    rms = max(np.mean(signal**2), eps)
-    return 10 * np.log10(rms)
+    num_samples = len(signal)
+    num_frames = int(num_samples / frame_size)
 
+    rms = 0
+    for i in range(num_frames):
+        start, end = i * frame_size, (i + 1) * frame_size
+        rms += np.mean(signal[start:end] ** 2)
+
+    rms = max(rms / num_frames, eps)
+
+    return 10 * np.log10(rms)
 
 def xcorr(signal1, signal2):
     sig1_centered = signal1 - np.mean(signal1)

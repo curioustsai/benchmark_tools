@@ -1,5 +1,6 @@
-scp
-paramiko
-paramiko_expect
-soundcard
-librosa
+scp==0.14.1
+paramiko==2.7.2
+paramiko_expect==0.3.0
+soundcard==0.4.1
+librosa==0.8.1
+scipy==1.7.3
