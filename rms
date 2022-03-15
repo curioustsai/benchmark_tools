@@ -49,6 +49,23 @@ if __name__ == "__main__":
             exit()
         rate = rates[0]
 
+        timeticks_sec = np.arange(0, int(num_samples / rate), 1)
+        timeticks_frame = timeticks_sec * rate / frame_size
+        timeticks_sample = timeticks_sec * rate
+
+        plt.subplot(2,1,1)
+        for data in wavs:
+            plt.plot(data)
+
+        plt.xlim([0, num_samples])
+        plt.ylim([-1, 1])
+        plt.xticks(timeticks_sample, timeticks_sec, rotation=45)
+        plt.yticks(np.arange(-1, 1.1, 0.1))
+        plt.grid()
+        plt.xlabel('time (sec)')
+        plt.ylabel('sample value')
+
+        plt.subplot(2,1,2)
         for name, data in zip(names, wavs):
             rms_per_frame = []
             for i in range(num_frames):
@@ -57,9 +74,7 @@ if __name__ == "__main__":
 
             plt.plot(rms_per_frame, label=name)
 
-        timeticks_sec = np.arange(0, int(num_samples / rate), 1)
-        timeticks_frame = timeticks_sec * rate / frame_size
-        timeticks_sample = timeticks_sec * rate
+
 
         plt.xlim([0, num_frames])
         plt.ylim([-96, 0])
