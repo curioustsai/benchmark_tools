@@ -35,9 +35,15 @@ if __name__ == "__main__":
 
         for f in args.file:
             data, rate = soundfile.read(f.name)
-            names.append(f.name)
-            rates.append(rate)
-            wavs.append(data)
+            if data.ndim > 1:
+                for ch in range(data.ndim):
+                    names.append('{} (ch{})'.format(f.name, ch))
+                    rates.append(rate)
+                    wavs.append(data[:,ch])
+            else:
+                names.append(f.name)
+                rates.append(rate)
+                wavs.append(data)
 
         num_samples_all = [len(data) for data in wavs]
         num_samples = min(num_samples_all)
@@ -54,8 +60,8 @@ if __name__ == "__main__":
         timeticks_sample = timeticks_sec * rate
 
         plt.subplot(2,1,1)
-        for data in wavs:
-            plt.plot(data)
+        for name, data in zip(names, wavs):
+            plt.plot(data, label=name)
 
         plt.xlim([0, num_samples])
         plt.ylim([-1, 1])
@@ -64,6 +70,7 @@ if __name__ == "__main__":
         plt.grid()
         plt.xlabel('time (sec)')
         plt.ylabel('sample value')
+        plt.legend()
 
         plt.subplot(2,1,2)
         for name, data in zip(names, wavs):
