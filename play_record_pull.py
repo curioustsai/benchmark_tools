@@ -17,10 +17,10 @@ fh.setLevel(logging.DEBUG)
 log.addHandler(fh)
 
 
-def play_record_pull_audio(ssh, host_play_audio, dut_play_audio, delay_start_sec, dst_folder, record_sec, model):
+def play_record_pull_audio(ssh, host_play_audio, dut_play_audio, delay_start_sec, dst_folder, record_sec, record_channel, model):
     dut_play_path="/tmp/play.wav"
     dut_record_path = "/tmp/record.wav"
-    cmd_record = "arecord -D ubnt_capture -r 16000 -f S16_LE -d {} {}".format(record_sec, dut_record_path)
+    cmd_record = "arecord -D ubnt_capture -r 16000 -c {} -f S16_LE -d {} {}".format(record_channel, record_sec, dut_record_path)
     cmd_play = "aplay -f S16_LE -r 16000 {}".format(dut_play_path)
     script_file = "./script.sh"
 
@@ -57,10 +57,10 @@ def play_record_pull_audio(ssh, host_play_audio, dut_play_audio, delay_start_sec
     return host_record_file
 
 
-def record_pull_audio(ssh, dut_play_audio, dst_folder, record_sec, model):
+def record_pull_audio(ssh, dut_play_audio, dst_folder, record_sec, record_channel, model):
     dut_play_path="/tmp/play.wav"
     dut_record_path = "/tmp/record.wav"
-    cmd_record = "arecord -D ubnt_capture -r 16000 -f S16_LE -d {} {}".format(record_sec, dut_record_path)
+    cmd_record = "arecord -D ubnt_capture -r 16000 -c {} -f S16_LE -d {} {}".format(record_channel, record_sec, dut_record_path)
     cmd_play = "aplay -f S16_LE -r 16000 {}".format(dut_play_path)
     script_file = "./script.sh"
 
@@ -124,6 +124,8 @@ if __name__ == '__main__':
     parser.add_argument("--dest_folder", type=pathlib.Path,
         default=os.getcwd(),
         help="destinate folder, default: current working directory")
+    parser.add_argument("-c", "--channel", type=int, default=1,
+        help="channel number of recording")
 
     p = parser.parse_args()
     camera_ip = p.ip
@@ -133,6 +135,7 @@ if __name__ == '__main__':
     host_play_audio = p.host_play_audio
     dut_play_audio = p.dut_play_audio
     dst_folder = p.dest_folder
+    record_channel = p.channel
 
     record_sec = p.duration
     if dut_play_audio is not None:
@@ -162,10 +165,12 @@ if __name__ == '__main__':
             delay_start_sec=delay_start_sec,
             dst_folder=dst_folder,
             record_sec=record_sec,
+            record_channel=record_channel,
             model=model)
     else:
         degraded_path = record_pull_audio(ssh,
             dut_play_audio=dut_play_audio,
-            record_sec=record_sec,
             dst_folder=dst_folder,
+            record_sec=record_sec,
+            record_channel=record_channel,
             model=model)
