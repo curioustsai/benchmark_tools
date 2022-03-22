@@ -172,7 +172,7 @@ if __name__ == '__main__':
         help="gain (dB) to be applied on the dut wave file, default: 1.0")
     parser.add_argument("--dest_folder", type=pathlib.Path,
         default=os.getcwd(),
-        help="destinate folder, default: current working directory")
+        help="destination folder, default: current working directory")
     parser.add_argument("-c", "--channel", type=int, default=1,
         help="channel number of recording")
 

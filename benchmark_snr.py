@@ -123,7 +123,7 @@ def main_process(speech_file, dut_file, config, output_folder, csv_file):
 
     # 2. read timestamp from config
     names, timestamp_start, timestamp_end = readTimestamp(config)
-                
+
     # 3. calculate rms of speech_file and dut_file within timestamp
     rms_list = []
     dut_timestamp_start = []
@@ -164,7 +164,7 @@ def main_process(speech_file, dut_file, config, output_folder, csv_file):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="batch run of benchmark snr")
+    parser = argparse.ArgumentParser(description="A customized script for benchmark SNR experiment")
     parser.add_argument("-s", "--speech_file", type=pathlib.Path,
                         default=None,
                         help="clean speech source file")
