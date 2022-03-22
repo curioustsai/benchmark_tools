@@ -8,6 +8,10 @@ from utils.audio import xcorr, align_wav
 
 project_dir = os.path.dirname(os.path.abspath(__file__))
 log_dir = os.path.join(project_dir, "logs")
+
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
 log_file = os.path.join(log_dir, "align_wavfiles.txt")
 
 log = logging.getLogger('Diag')

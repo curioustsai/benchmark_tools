@@ -1,5 +1,4 @@
 import os
-import subprocess
 import time
 import datetime
 import logging
@@ -13,8 +12,11 @@ from utils.board_info import get_model_name
 project_dir = os.path.dirname(os.path.abspath(__file__))
 tmp_dir = os.path.join(project_dir, 'tmp')
 log_dir = os.path.join(project_dir, "logs")
-log_file = os.path.join(log_dir, "play_record_pull.txt")
 
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+log_file = os.path.join(log_dir, "play_record_pull.txt")
 log = logging.getLogger('Diag')
 log.setLevel(logging.DEBUG)
 fh = logging.FileHandler(filename=log_file)
@@ -96,27 +98,57 @@ def record_pull_audio(ssh, dut_play_audio, dst_folder, record_sec, record_channe
     return host_record_file
 
 
-def calculate_visqol_mos(reference_file, degraded_file):
-    visqol_bin = "/home/richard/workspace/audio_quality/visqol/bazel-bin/visqol"
-
-    subprocess.run([visqol_bin,
-        "--reference_file", reference_file,
-        "--degraded_file", degraded_file,
-        "--use_speech_mode",
-        "--use_unscaled_speech_mos_mapping"])
-
 def apply_gain(src_file, dest_file, gain_dB):
     data, rate = soundfile.read(src_file)
     gain = pow(10, gain_dB / 20)
     data *= gain
     soundfile.write(dest_file, data, rate)
+    log.info("apply {:2.2} dB on {}".format(gain_dB, src_file))
+
+
+def single_process(dut_play_audio=None, dut_play_gain=1.0,
+                   host_play_audio=None, host_play_gain=1.0,
+                   record_channel=1, record_sec=10.0):
+
+    if dut_play_audio is not None:
+        samples, sample_rate = soundfile.read(dut_play_audio)
+        record_sec = int(len(samples)/sample_rate) + delay_start_sec + 1
+
+        if dut_play_gain != 1.0:
+            tmp_dut_file = os.path.join(tmp_dir, 'tmp_dut_audio.wav')
+            apply_gain(dut_play_audio, tmp_dut_file, dut_play_gain)
+            dut_play_audio = tmp_dut_file
+
+    if host_play_audio is not None:
+        if host_play_gain != 1.0:
+            tmp_host_file = os.path.join(tmp_dir, 'tmp_host_audio.wav')
+            apply_gain(host_play_audio, tmp_host_file, host_play_gain)
+            host_play_audio = tmp_host_file
+
+        host_record_file = play_record_pull_audio(ssh,
+            host_play_audio=host_play_audio,
+            dut_play_audio=dut_play_audio,
+            delay_start_sec=delay_start_sec,
+            dst_folder=dst_folder,
+            record_sec=record_sec,
+            record_channel=record_channel,
+            model=model)
+    else:
+        host_record_file = record_pull_audio(ssh,
+            dut_play_audio=dut_play_audio,
+            dst_folder=dst_folder,
+            record_sec=record_sec,
+            record_channel=record_channel,
+            model=model)
+
+    return host_record_file
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Play, Record, and Pull audio")
     parser.add_argument("--ip", type=str,
         default="192.168.1.156",
-        help="camera ip")
+        help="camera ip address")
     parser.add_argument("--username", type=str,
         default="ubnt",
         help="camera username, default: ubnt")
@@ -128,16 +160,16 @@ if __name__ == '__main__':
         help="recording duration when source file is not specified, default: 10.0")
     parser.add_argument("--host_play_audio", type=pathlib.Path,
         default=None,
-        help="source file to be played on host, default: None")
+        help="source file / directory to be played on host, default: None")
     parser.add_argument("--host_play_gain", type=float,
         default=1.0,
-        help="gain to be applied on the host wav file, default: 1.0")
+        help="gain (dB) to be applied on the host wav file, default: 1.0")
     parser.add_argument("--dut_play_audio", type=pathlib.Path,
         default=None,
-        help="source file to be played on dut, default: None")
+        help="source file / directory to be played on DUT, default: None")
     parser.add_argument("--dut_play_gain", type=float,
         default=1.0,
-        help="gain to be applied on the dut wave file, default: 1.0")
+        help="gain (dB) to be applied on the dut wave file, default: 1.0")
     parser.add_argument("--dest_folder", type=pathlib.Path,
         default=os.getcwd(),
         help="destinate folder, default: current working directory")
@@ -155,19 +187,10 @@ if __name__ == '__main__':
     dut_play_gain = p.dut_play_gain
     dst_folder = p.dest_folder
     record_channel = p.channel
+    record_sec = p.duration
 
     if not os.path.exists(tmp_dir):
         os.makedirs(tmp_dir)
-
-    record_sec = p.duration
-    if dut_play_audio is not None:
-        samples, sample_rate = soundfile.read(dut_play_audio)
-        record_sec = int(len(samples)/sample_rate) + delay_start_sec + 1
-
-        if dut_play_gain != 1.0:
-            tmp_dut_file = os.path.join(tmp_dir, 'tmp_dut_audio.wav')
-            apply_gain(dut_play_audio, tmp_dut_file, dut_play_gain)
-            dut_play_audio = tmp_dut_file
 
     try:
         ssh = SSHClient(host=camera_ip, port=22,
@@ -175,6 +198,7 @@ if __name__ == '__main__':
             password=password)
 
         log.info('ssh successfully')
+
     except Exception as e:
         log.info(e)
         msg = 'connect to "{}" failed...'.format(camera_ip)
@@ -185,24 +209,52 @@ if __name__ == '__main__':
 
     model = get_model_name(ssh)
 
-    if host_play_audio is not None:
-        if host_play_gain != 1.0:
-            tmp_host_file = os.path.join(tmp_dir, 'tmp_host_audio.wav')
-            apply_gain(host_play_audio, tmp_host_file, host_play_gain)
-            host_play_audio = tmp_host_file
-
-        degraded_path = play_record_pull_audio(ssh,
-            host_play_audio=host_play_audio,
-            dut_play_audio=dut_play_audio,
-            delay_start_sec=delay_start_sec,
-            dst_folder=dst_folder,
-            record_sec=record_sec,
-            record_channel=record_channel,
-            model=model)
+    if host_play_audio is not None and os.path.isdir(host_play_audio):
+        if dut_play_audio is not None and os.path.isdir(dut_play_audio):
+            # Use case: host_play_audio, dut_play_audio are both folders
+            for dirpath_host, dirname_host, filename_host in os.walk(host_play_audio):
+                for h in filename_host:
+                    if not h.endswith('.wav'):
+                        continue
+                    for dirpath_dut, dirname_dut, filename_dut in os.walk(dut_play_audio):
+                        for d in filename_dut:
+                            if not d.endswith('.wav'):
+                                continue
+                            host = os.path.join(dirpath_host, h)
+                            dut = os.path.join(dirpath_dut, d)
+                            log.info('host file: {}, dut file: {}'.format(host, dut))
+                            print('host file: {}, dut file: {}'.format(host, dut))
+                            single_process(dut, dut_play_gain, host, host_play_gain,
+                                           record_channel, record_sec)
+        else:
+            # Use case: host_play_audio is a folder, dut_play_audio is an audio file
+            for dirpath_host, dirname_host, filename_host in os.walk(host_play_audio):
+                for h in filename_host:
+                    if not h.endswith('.wav'):
+                        continue
+                    host = os.path.join(dirpath_host, h)
+                    log.info('host file: {}, dut file: {}'.format(host, dut_play_audio))
+                    print('host file: {}, dut file: {}'.format(host, dut_play_audio))
+                    single_process(dut_play_audio, dut_play_gain,
+                                   host, host_play_gain,
+                                   record_channel, record_sec)
     else:
-        degraded_path = record_pull_audio(ssh,
-            dut_play_audio=dut_play_audio,
-            dst_folder=dst_folder,
-            record_sec=record_sec,
-            record_channel=record_channel,
-            model=model)
+        if dut_play_audio is not None and os.path.isdir(dut_play_audio):
+            # Use case: dut_play_audio is a folder, host_play_audio is an audio file
+            for dirpath_dut, dirname_dut, filename_dut in os.walk(dut_play_audio):
+                for d in filename_dut:
+                    if not d.endswith('.wav'):
+                        continue
+                    dut = os.path.join(dirpath_dut, d)
+                    log.info('host file: {}, dut file: {}'.format(host_play_audio, dut))
+                    print('host file: {}, dut file: {}'.format(host_play_audio, dut))
+                    single_process(dut, dut_play_gain,
+                                   host_play_audio, host_play_gain,
+                                   record_channel, record_sec)
+        else:
+            log.info('host file: {}, dut file: {}'.format(host_play_audio, dut_play_audio))
+            print('host file: {}, dut file: {}'.format(host_play_audio, dut_play_audio))
+            single_process(dut_play_audio, dut_play_gain,
+                              host_play_audio, host_play_gain,
+                              record_channel, record_sec)
+
