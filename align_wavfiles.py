@@ -6,9 +6,13 @@ import logging
 from glob import glob
 from utils.audio import xcorr, align_wav
 
+project_dir = os.path.dirname(os.path.abspath(__file__))
+log_dir = os.path.join(project_dir, "logs")
+log_file = os.path.join(log_dir, "align_wavfiles.txt")
+
 log = logging.getLogger('Diag')
 log.setLevel(logging.DEBUG)
-fh = logging.FileHandler(filename='log.txt')
+fh = logging.FileHandler(filename=log_file)
 fh.setLevel(logging.DEBUG)
 log.addHandler(fh)
 

@@ -1,4 +1,8 @@
 import re
+import os
+
+project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+tmp_dir =os.path.join(project_dir, 'tmp')
 
 board_dict = {
     'model': re.compile(r'board.name=(?P<model>.*)\n'),
@@ -14,11 +18,15 @@ def parse_line(line, rx_dict):
     return None, None
 
 def get_model_name(ssh):
-    ssh.get_file("/etc/board.info", "./board.info")
+    if not os.path.exists(tmp_dir ):
+        os.makedirs(tmp_dir )
+
+    board_file = os.path.join(tmp_dir , "board.info")
+    ssh.get_file("/etc/board.info", board_file)
     model = ""
     hwaddr = ""
 
-    with open("./board.info") as f:
+    with open(board_file) as f:
         for line in f.readlines():
             key, match = parse_line(line, board_dict)
 
