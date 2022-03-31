@@ -192,5 +192,6 @@ if __name__ == '__main__':
         os.remove(csv_file)
 
     for dut_file in os.listdir(dut_folder):
-        dut_path = os.path.join(dut_folder, dut_file)
-        main_process(speech_file, dut_path, config, output_folder, csv_file)
+        if dut_file.endswith("wav"):
+            dut_path = os.path.join(dut_folder, dut_file)
+            main_process(speech_file, dut_path, config, output_folder, csv_file)

@@ -1,6 +1,8 @@
 # Benchmark Tools
 The package of `Benchmark Tools` is a collection of useful audio tools that help your experiment smooth.
 
+**Version: 1.0.0**
+
 ## Installation
 Please install required package first
 ```
