@@ -6,6 +6,7 @@ Created on Mar 9, 2022
 
 """
 import os
+import shutil
 import argparse
 import pathlib
 import soundfile 
@@ -185,8 +186,9 @@ if __name__ == '__main__':
     output_folder = parse_value.output
     csv_file = os.path.join(output_folder, os.path.basename(dut_folder) + '.csv')
 
-    if not os.path.isdir(output_folder):
-        os.makedirs(output_folder)
+    if os.path.exists(output_folder):
+        shutil.rmtree(output_folder)
+    os.makedirs(output_folder)
 
     if os.path.exists(csv_file):
         os.remove(csv_file)
