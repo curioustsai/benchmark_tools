@@ -121,6 +121,7 @@ def main_process(speech_file, dut_file, config, output_folder, csv_file):
     search_start = max(0, start - search_range_sec * rate)
     search_end = min(end + search_range_sec * rate, len(dut_data))
     lag = xcorr(speech_data[start:end], dut_data[search_start:search_end])
+    lag_ms = lag / rate
 
     # 2. read timestamp from config
     names, timestamp_start, timestamp_end = readTimestamp(config)
@@ -138,7 +139,7 @@ def main_process(speech_file, dut_file, config, output_folder, csv_file):
     # 4. output csv format
     with open(csv_file, "a") as csv:
         if os.stat(csv_file).st_size == 0:
-            header = "File, "
+            header = "File, delay(ms), "
             header_rms = ""
             header_time = ""
             for name in names:
@@ -149,7 +150,7 @@ def main_process(speech_file, dut_file, config, output_folder, csv_file):
 
         file_stat = "{}, ".format(dut_file)
         time_str = ""
-        rms_str = ""
+        rms_str = "{:2.2f}, ".format(lag_ms)
         for s, e, r in zip(dut_timestamp_start, dut_timestamp_end, rms_list):
             ss = sample2timestamp(s, rate)
             ee  = sample2timestamp(e, rate)
