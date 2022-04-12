@@ -139,45 +139,44 @@ examples/benchmark_snr/results
 └── dut2.png
 ```
 
-## 4. Echo Return Loss Energy (ERLE) plotter
-usage: erle_plotter.py [-h] [-f FAREND] [-n NEAREND] [-p PROCESSED]
-
-* Linux:
-```
-python erle_plotter.py -f benchmark_erle/DoubleTestSignal-far_end_44100.wav -n benchmark_erle/DoubleTestSignal-near_end_44100.wav -p benchmark_erle/TouchMax_75dBC_SPK79dBC@50cm-2.wav
-```
-* Windows:
-```
-python erle_plotter.py -f benchmark_erle\DoubleTestSignal-far_end_44100.wav -n benchmark_erle\DoubleTestSignal-near_end_44100.wav -p benchmark_erle\TouchMax_75dBC_SPK79dBC@50cm-2.wav
-```
-![ERLR example](./images/erle_example.png)
-
-## 5. Root Mean Square (RMS)
+## 4. Root Mean Square (RMS)
 usage: rms [-h] [-v] [-f FRAME_SIZE] file [file ...]
 
 Calculate the rms for the entire wave file
 ---
 * Linux:
 ```
-python rms benchmark_erle/DoubleTestSignal-far_end_44100.wav
+python rms examples/benchmark_erle/DoubleTestSignal-far_end_44100.wav
 ```
 * Windows:
 ```
-python rms benchmark_erle\DoubleTestSignal-far_end_44100.wav
+python rms examples\benchmark_erle\DoubleTestSignal-far_end_44100.wav
 ```
 * result:
 ```
-[rms] benchmark_erle/DoubleTestSignal-far end_44100.wav: -23.759493494843756
+[rms] examples/benchmark_erle/DoubleTestSignal-far end_44100.wav: -23.759493494843756
 ```
 
 Visualize the rms versus time
 ---
 * Linux:
 ```
-python rms -v benchmark_erle/DoubleTestSignal-far_end_44100.wav
+python rms -v examples/benchmark_erle/DoubleTestSignal-far_end_44100.wav
 ```
 * Windows:
 ```
-python rms -v benchmark_erle\DoubleTestSignal-far_end_44100.wav
+python rms -v examples\benchmark_erle\DoubleTestSignal-far_end_44100.wav
 ```
 ![RMS example](./images/rms_level.png)
+
+Visualize the rms versus time (Multiple soundfile at a time)
+---
+* Linux:
+```
+python rms -v examples/benchmark_erle/DoubleTestSignal-far_end_44100.wav examples/benchmark_erle/DoubleTestSignal-near_end_44100.wav
+```
+* Windows:
+```
+python rms -v examples\benchmark_erle\DoubleTestSignal-far_end_44100.wav examples\benchmark_erle\DoubleTestSignal-near_end_44100.wav
+```
+![RMS example II](./images/rms_level_II.png)
