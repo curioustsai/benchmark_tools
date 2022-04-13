@@ -16,6 +16,9 @@ from matplotlib import pyplot as plt
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Spectrum Analyzer")
     parser.add_argument("file", type=argparse.FileType('r'), nargs='+')
+    parser.add_argument("-s", "--start", type=float, default=0.0, help="start (sec)")
+    parser.add_argument("-e", "--end", type=float, default=0.0,
+                        help="end (sec), default: len(data)")
     args = parser.parse_args()
 
     plt.rcParams['figure.figsize'] = [12.4, 9.6]
@@ -27,9 +30,26 @@ if __name__ == "__main__":
             data = data / 32768
 
         fftlen = fftlen_map[str(fs)];
+        start = int(args.start * fs)
+        if args.end == 0.0:
+            end = len(data)
+        else:
+            end = int(args.end * fs)
 
+        # plot figure 1
+        plt.subplot(211)
+        plt.plot(data)
+        xticks = np.arange(start//fs, end//fs + 1)
+        xticks_sample = xticks * fs
+        plt.xticks(xticks_sample, xticks)
+        plt.xlim(start, end)
+        plt.ylim(-1, 1)
+        plt.grid()
+
+        # plot figure 2
+        plt.subplot(212)
         noverlap = fftlen / 2
-        freq, Pxx = signal.welch(data,                        # signal
+        freq, Pxx = signal.welch(data[start:end],          # signal
                                  fs=fs,                    # sample rate
                                  nperseg=fftlen,           # segment size
                                  window='hanning',         # window type to use
@@ -46,7 +66,7 @@ if __name__ == "__main__":
         plt.yticks(np.arange(-96, 0, 6))
         plt.xlabel('f, Hz')
         plt.ylabel('Power spectrum, dB')
-        plt.grid(True)
+        plt.grid()
         plt.legend()
 
     plt.show()

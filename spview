@@ -18,22 +18,26 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     for f in args.file:
-        fig, (ax1, ax2) = plt.subplots(nrows=2, sharex=True)
-        plt.rcParams['figure.figsize'] = [12.4, 9.6]
         fftlen_map = {"48000": 512, "32000": 512, "16000": 256, "8000": 256}
 
         fs, data = wavfile.read(f.name)
         if data.dtype == 'int16':
             data = data / 32768
 
-        time_axis = np.arange(0, len(data)) / fs
-        ax1.plot(time_axis, data)
-        ax1.set(xlim=(0, time_axis[-1]), ylim=(-1, 1))
-        ax1.grid()
-        
+        plt.subplot(211)
+        plt.rcParams['figure.figsize'] = [12.4, 9.6]
+        plt.plot(data)
+        plt.xlim(0, len(data))
+        plt.ylim(-1, 1)
+        xticks = np.arange(0, len(data) // fs)
+        xticks_samples = xticks * fs
+        plt.xticks(xticks_samples, xticks)
+        plt.grid()
+
+        plt.subplot(212)
         fftlen = fftlen_map[str(fs)];
         noverlap = fftlen / 2
-        Pxx, freqs, bins, im = ax2.specgram(data, NFFT=fftlen, Fs=fs, noverlap=fftlen/2)
+        Pxx, freqs, bins, im = plt.specgram(data, NFFT=fftlen, Fs=fs, noverlap=fftlen/2)
 
         plt.title(f.name)
         plt.show()
